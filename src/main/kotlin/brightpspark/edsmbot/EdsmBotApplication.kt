@@ -1,5 +1,7 @@
 package brightpspark.edsmbot
 
+import brightpspark.edsmbot.listener.EvenirEventListener
+import brightpspark.edsmbot.listener.JDAEventListener
 import bvanseg.kotlincommons.armada.CommandManager
 import bvanseg.kotlincommons.armada.gears.Gear
 import net.dv8tion.jda.api.JDA
@@ -27,9 +29,14 @@ class EdsmBotApplication {
 	private lateinit var token: String
 
 	@Autowired
-	private lateinit var eventListener: EventListener
+	private lateinit var jdaEventListener: JDAEventListener
+
+	@Autowired
+	private lateinit var evenirEventListener: EvenirEventListener
+
 	@Autowired
 	private lateinit var commandManager: CommandManager<Long>
+
 	@Autowired
 	private lateinit var gears: Array<Gear>
 
@@ -43,7 +50,7 @@ class EdsmBotApplication {
 			.setStatus(OnlineStatus.DO_NOT_DISTURB)
 			.setActivity(Activity.playing("www.edsm.net | ${commandManager.prefix} help"))
 			.setEventManager(AnnotatedEventManager())
-			.addEventListeners(eventListener)
+			.addEventListeners(jdaEventListener)
 		try {
 			jda = builder.build()
 		} catch (e: LoginException) {
@@ -51,6 +58,7 @@ class EdsmBotApplication {
 			exitProcess(0)
 		}
 
+		commandManager.eventBus.addListener(evenirEventListener)
 		gears.forEach { commandManager.addGear(it) }
 	}
 }

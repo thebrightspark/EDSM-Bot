@@ -1,4 +1,4 @@
-package brightpspark.edsmbot
+package brightpspark.edsmbot.listener
 
 import brightpspark.edsmbot.command.DiscordContext
 import bvanseg.kotlincommons.any.getLogger
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component
  * @author bright_spark
  */
 @Component
-class EventListener {
+class JDAEventListener {
 	private val log = getLogger()
 
 	@Autowired
