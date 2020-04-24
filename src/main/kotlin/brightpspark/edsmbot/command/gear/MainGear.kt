@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 /**
+ * The main command gear
+ *
  * @author bright_spark
  */
 @Component

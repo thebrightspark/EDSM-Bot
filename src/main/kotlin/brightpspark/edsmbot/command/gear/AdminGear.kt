@@ -7,6 +7,8 @@ import bvanseg.kotlincommons.armada.gears.Gear
 import org.springframework.stereotype.Component
 
 /**
+ * The admin command gear
+ *
  * @author bright_spark
  */
 @Component

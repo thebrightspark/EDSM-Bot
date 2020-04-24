@@ -14,16 +14,25 @@ import org.springframework.web.client.ResponseErrorHandler
 import org.springframework.web.client.getForEntity
 
 /**
+ * Service to get data from the EDSM API
+ *
  * @author bright_spark
  */
 @Service
 class ApiService {
 	companion object {
+		/**
+		 * The REST template used to build requests
+		 * Has a custom error handler which does not handle errors so they can be handled in [get]
+		 */
 		private val REST = RestTemplateBuilder().errorHandler(object : ResponseErrorHandler {
 			override fun hasError(response: ClientHttpResponse): Boolean = false
 			override fun handleError(response: ClientHttpResponse) = Unit
 		}).build()
 
+		/**
+		 * The Jackson JSON mapper, with enum case insensitivity
+		 */
 		private val JSON_MAPPER = jacksonObjectMapper().enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
 		private const val EMPTY_JSON = "[]"
 
@@ -41,6 +50,13 @@ class ApiService {
 
 	private val log = getLogger()
 
+	/**
+	 * Posts the [request] and returns the result
+	 *
+	 * @param request The HTTP GET request to post
+	 * @return The response body
+	 * @throws HttpException if the response contains an error code or the response body is empty
+	 */
 	private fun get(request: String): String {
 		log.info("HTTP GET: $request")
 		val response = REST.getForEntity<String>(request)
@@ -53,6 +69,16 @@ class ApiService {
 		return response.body!!
 	}
 
+	/**
+	 * Posts the [request] and returns the result parse from JSON to the type [T]
+	 *
+	 * @param request The HTTP GET request to post
+	 * @param T The return type to parse the response JSON to
+	 * @return The response body parsed to a [T]
+	 * @throws HttpException if the response contains an error code or the response body is empty
+	 * @throws NoDataException if the response contains no data
+	 * @throws JsonException if the response fails to parse to the type [T]
+	 */
 	private inline fun <reified T> getAndParse(request: String): T {
 		val json = get(request)
 		if (json == EMPTY_JSON)
@@ -64,10 +90,28 @@ class ApiService {
 		}
 	}
 
+	/**
+	 * Uses the EDSM Status API to get the Elite Dangerous server status
+	 *
+	 * @return The ED server [Status]
+	 */
 	fun getStatus(): Status = getAndParse(API_STATUS)
 
+	/**
+	 * Uses the EDSM Systems API to get details about the system by its [systemName]
+	 *
+	 * @param systemName The name of the system to get details of
+	 * @return The [System] object containing the details
+	 */
 	fun getSystem(systemName: String): System = getAndParse(API_SYSTEM.format(systemName))
 
+	/**
+	 * Validates that the [minRadius] and [radius] are within their correct bounds for the EDSM Sphere Systems API
+	 *
+	 * @param minRadius The minimum radius of the sphere
+	 * @param radius The maximum radius of the sphere
+	 * @throws InvalidInputException If either the [minRadius] or [radius] are out of their bounds
+	 */
 	private fun validateRadius(minRadius: Int, radius: Int): Unit = when {
 		minRadius !in 0..radius -> throw InvalidInputException("Min radius ($minRadius) must be between 0 and the radius ($radius)!")
 		radius !in minRadius..100 -> throw InvalidInputException("Radius ($radius) must be between min radius ($minRadius) and 100!")
@@ -84,6 +128,12 @@ class ApiService {
 		return getAndParse(API_SYSTEMS_SPHERE_COORD.format(x, y, z, minRadius, radius))
 	}
 
+	/**
+	 * Validates that the [size] is within its correct bounds for the EDSM Cube Systems API
+	 *
+	 * @param size The size of the cube
+	 * @throws InvalidInputException If the [size] is out of its bounds
+	 */
 	private fun validateSize(size: Int) = when (size) {
 		!in 0..200 -> throw InvalidInputException("Size ($size) must be between 0 and 200!")
 		else -> Unit

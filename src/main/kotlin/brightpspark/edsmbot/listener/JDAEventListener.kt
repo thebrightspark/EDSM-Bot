@@ -11,6 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 /**
+ * Class for JDA event listeners.
+ * This is where we set the bot status to [OnlineStatus.ONLINE] once JDA is ready, and listen for messages to send them
+ * to our Armada [CommandManager] for processing.
+ *
  * @author bright_spark
  */
 @Component
@@ -23,16 +27,19 @@ class JDAEventListener {
 	@SubscribeEvent
 	fun onReady(event: ReadyEvent) {
 		log.info("JDA ready with ${event.guildAvailableCount} / ${event.guildTotalCount} guilds!")
+		// The bot is now ready, so set the status to ONLINE
 		event.jda.presence.setStatus(OnlineStatus.ONLINE)
 	}
 
 	@SubscribeEvent
 	fun onMessage(event: MessageReceivedEvent) {
 		val author = event.author
+		// Ensure we're not handling commands from bots
 		if (author.isBot) return
 		val raw = event.message.contentRaw
 		log.debug("Received command from $author: $raw")
 		try {
+			// Send the message to the Armada command manager
 			commandManager.execute(raw, DiscordContext(event))
 		} catch (e: Exception) {
 			log.error("Error executing command '$raw'", e)

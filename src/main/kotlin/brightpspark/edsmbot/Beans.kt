@@ -10,6 +10,9 @@ import org.springframework.context.annotation.Configuration
  */
 @Configuration
 class Beans {
+	/**
+	 * [CommandManager] bean
+	 */
 	@Bean
-	fun commandManager(@Value("\${prefix:cb?}") prefix: String): CommandManager<Long> = CommandManager(prefix)
+	fun commandManager(@Value("\${prefix:ed?}") prefix: String): CommandManager<Long> = CommandManager(prefix)
 }
